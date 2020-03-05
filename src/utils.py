@@ -402,6 +402,7 @@ def gen_report(dictionary):
 						c.drawString(x,y, wrap_text[0])
 						y = y - 15
 						c.drawString(x,y, wrap_text[1])
+						y = y - 15
 					else:
 						c.drawString(x,y,item)
 						y = y - 15
