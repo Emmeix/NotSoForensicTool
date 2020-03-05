@@ -48,6 +48,31 @@ ENCRYPTION_KEY = {
 		'x':'A',
 		'y':'c',
 		'z':'E',
+		'A':'W',
+		'B':'f',
+		'C':'L',
+		'D':'I',
+		'E':'O',
+		'F':'q',
+		'G':'U',
+		'H':'+',
+		'I':'h',
+		'J':'l',
+		'K':'Q',
+		'L':'T',
+		'M':'0',
+		'N':'t',
+		'O':'R',
+		'P':'2',
+		'Q':'j',
+		'R':'8',
+		'S':'V',
+		'T':'r',
+		'U':'1',
+		'V':'k',
+		'X':'v',
+		'Y':'z',
+		'Z':'4',
 		'0':'u',
 		'1':'N',
 		'2':'o',
@@ -183,15 +208,18 @@ def system_information():
 	#System Software Information
 	systeminfo = platform.uname()
 	names = ['System: ', 'Node: ', 'Release: ', 'Version: ', 'Machine: ', 'Processor: ']
-	results.append('='*40 + "System Information" + '='*40)
+	results.append('='*30 + "System Information" + '='*30)
 	for name, info in zip(names, systeminfo):
 		results.append(name + info)
 	results.append('')
 
 	#CPU Information
-	cpuinfo_name = ' '.join(os.popen('lscpu | grep "Model name"').read().split()[2:])
+	if systeminfo.system.lower() == 'linux':
+		cpuinfo_name = ' '.join(os.popen('lscpu | grep "Model name"').read().split()[2:])
+	else:
+		cpuinfo_name = ''
 	cpuinfo_freq = psutil.cpu_freq()
-	results.append('='*40 + 'CPU Information' + '='*40)
+	results.append('='*30 + 'CPU Information' + '='*30)
 	results.append("Processor Name: " + cpuinfo_name)
 	results.append("Physical Cores: " + str(psutil.cpu_count(logical=False)))
 	results.append("Logical Cores: " + str(psutil.cpu_count(logical=True)))
@@ -205,15 +233,16 @@ def system_information():
 	results.append('')
 
 	#GPU Information	
-	results.append('='*40 + 'GPU Information' +'='*40)
-	for i, gpu in enumerate(os.popen('lspci | grep VGA | cut -d ":" -f3').read().strip().split('\n')):
-		results.append(f"Graphical Adapter Name {i+1}: {gpu.strip()}")
+	results.append('='*30 + 'GPU Information' +'='*30)
+	if systeminfo.system.lower() == 'linux':
+		for i, gpu in enumerate(os.popen('lspci | grep VGA | cut -d ":" -f3').read().strip().split('\n')):
+			results.append(f"Graphical Adapter Name {i+1}: {gpu.strip()}")
 	results.append('')
 	
 	#Memory Information
 	meminfo = psutil.virtual_memory()
 	meminfo_swap = psutil.swap_memory()
-	results.append('='*40 + 'Memory Information' + '='*40)
+	results.append('='*30 + 'Memory Information' + '='*30)
 	results.append("Total Memory: " + get_size(meminfo.total))
 	results.append("Available Memory: " + get_size(meminfo.available))
 	results.append("Used Memory: " + get_size(meminfo.used))
@@ -227,7 +256,7 @@ def system_information():
 
 	#Disk Information
 	diskinfo_partitions = psutil.disk_partitions()
-	results.append('='*40 + "Disk Information" + '='*40)
+	results.append('='*30 + "Disk Information" + '='*30)
 	for partition in diskinfo_partitions:
 		results.append(f"==== Device: {partition.device} ====")
 		results.append("Mountpoint: " + partition.mountpoint)
@@ -246,22 +275,22 @@ def system_information():
 
 	#Network Information
 	netinfo_addrs = psutil.net_if_addrs()
-	results.append('='*40 + "Network Information" + '='*40)
+	results.append('='*30 + "Network Information" + '='*30)
 	for int_name, int_addr in netinfo_addrs.items():
 		results.append(f"==== Interface: {int_name} ====")
 		for addr in int_addr:
 			if str(addr.family) == "AddressFamily.AF_INET": # IPv4
-				results.append("IPv4 Address: " + addr.address)
-				results.append("Netmask: " + addr.netmask)
+				results.append("IPv4 Address: " + str(addr.address))
+				results.append("Netmask: " + str(addr.netmask))
 				results.append("Broadcast Address: " + str(addr.broadcast))
 				results.append('')
 			elif str(addr.family) == "AddressFamily.AF_INET6": # IPv6
-				results.append("IPv6 Address: " + addr.address)
-				results.append("Netmask: " + addr.netmask)
+				results.append("IPv6 Address: " + str(addr.address))
+				results.append("Netmask: " + str(addr.netmask))
 				results.append("Broadcast Address: " + str(addr.broadcast))
 				results.append('')
 			elif str(addr.family) == "AddressFamily.AF_PACKET": # MAC
-				results.append("MAC Address: " + addr.address)
+				results.append("MAC Address: " + str(addr.address))
 				results.append('')
 	netinfo_io = psutil.net_io_counters()
 	results.append("Total Bytes Sent: " + get_size(netinfo_io.bytes_sent))
@@ -305,21 +334,22 @@ def verify_files(path):		# Path = lista av filer
 	f = path				# Att inte ändra det som vi redan haft
 	hashlist = []
 	for item in f: 
-		_hash = hasher_md5(item)
-		compare = compare_hashes(_hash)
+		_hash_md5 = hasher_md5(item)
+		_hash_sha = hasher_sha256(item)
+
+		compare = compare_hashes(_hash_md5)
 		if compare != None: 
 			h = ("Hash duplicate found : {} : md5: {} ".format(item, compare))
 			hashlist.append(h)
 			print("\033[91mHash duplicate found\033[0m : \033[93m{}\033[0m : md5: {} ".format(item, compare))
-	for item in f:
-		_hash = hasher_sha256(item)
-		compare = compare_hashes(_hash)
+
+		compare = compare_hashes(_hash_sha)
 		if compare != None:
 			h = ("Hash duplicate found : {} : sha256: {}".format(item, compare))
 			hashlist.append(h)
 			print("\033[91mHash duplicate found\033[0m : \033[93m{}\033[0m : sha256: {} ".format(item, compare))
-	return hashlist                
 
+	return hashlist                
 
 def gen_report(dictionary):
 
@@ -338,37 +368,44 @@ def gen_report(dictionary):
 	for key, value in dictionary.items():
 		if key == 'sys':
 			c.setFont('Helvetica-Bold', 22)
-			c.drawString(x,y, "System information:")
+			c.drawString(x,y, "System Information:")
 			y = y - 30
 			c.setFont('Helvetica', 10)
 			for item in value:
-				if y <= 0:
+				if y <= 50:
 					c.showPage()
 					c.setFont('Helvetica', 10)
 					y = 11 * 72
-				if len(item) > 90: 
-					wrap_text = textwrap.wrap(item, width=90)
+				if len(item) > 110: 
+					wrap_text = textwrap.wrap(item, width=110)
 					c.drawString(x,y, wrap_text[0])
 					y = y - 15
 					c.drawString(x,y, wrap_text[1])
 				else:
 					c.drawString(x,y,item)
 					y = y - 15
+			y -= 30
 
 		elif key == 'hashset':
-			c.setFont('Helvetica-Bold', 22)
-			c.drawString(x,y,"Hashset:")
-			y = y - 30
-			c.setFont('Helvetica', 10)
-			for item in value:
-				if len(item) > 90:
-					wrap_text = textwrap.wrap(item, width=90)
-					c.drawString(x,y, wrap_text[0])
-					y = y - 15
-					c.drawString(x,y, wrap_text[1])
-				else:
-					c.drawString(x,y,item)
-				y = y - 15
+			if value:
+				c.setFont('Helvetica-Bold', 22)
+				c.drawString(x,y,"Hashset:")
+				y = y - 30
+				c.setFont('Helvetica', 10)
+				for item in value:
+					if y <= 50:
+						c.showPage()
+						c.setFont('Helvetica', 10)
+						y = 11 * 72
+					if len(item) > 110:
+						wrap_text = textwrap.wrap(item, width=110)
+						c.drawString(x,y, wrap_text[0])
+						y = y - 15
+						c.drawString(x,y, wrap_text[1])
+					else:
+						c.drawString(x,y,item)
+						y = y - 15
+				y -= 30
 
 		elif key == 'allfiles':
 			for mapp, filer in value.items():
@@ -377,8 +414,20 @@ def gen_report(dictionary):
 				y = y - 30
 				c.setFont('Helvetica', 10)
 				for item in filer:
-					c.drawString(x,y,item)
-					y = y - 15
+					if y <= 50:
+						c.showPage()
+						c.setFont('Helvetica', 10)
+						y = 11 * 72
+					if len(item) > 110:
+						wrap_text = textwrap.wrap(item, width=110)
+						c.drawString(x,y, wrap_text[0])
+						y = y - 15
+						c.drawString(x,y, wrap_text[1])
+					else:
+						c.drawString(x,y,item)
+						y = y - 15
+				y -= 30
+
 
 		elif key == 'extfiles': 
 			for ext, filer in value.items():
@@ -387,18 +436,40 @@ def gen_report(dictionary):
 				y = y - 30
 				c.setFont('Helvetica', 10)
 				for item in filer:
-					c.drawString(x,y,item)
-					y = y - 15
+					if y <= 50:
+						c.showPage()
+						c.setFont('Helvetica', 10)
+						y = 11 * 72
+					if len(item) > 110:
+						wrap_text = textwrap.wrap(item, width=110)
+						c.drawString(x,y, wrap_text[0])
+						y = y - 15
+						c.drawString(x,y, wrap_text[1])
+					else:
+						c.drawString(x,y,item)
+						y = y - 15
+				y -= 30
 
 		elif key == 'infofiles':
 			for info, filer in value.items():
 				c.setFont('Helvetica-Bold', 22)
 				c.drawString(x,y,'Files that contain ' + info )
 				y = y - 30
-				c.drawString('Helvetica', 10)
+				c.setFont('Helvetica', 10)
 				for item in filer:
-					c.drawString(x,y,item)
-					y = y- 15
+					if y <= 50:
+						c.showPage()
+						c.setFont('Helvetica', 10)
+						y = 11 * 72
+					if len(item) > 110:
+						wrap_text = textwrap.wrap(item, width=110)
+						c.drawString(x,y, wrap_text[0])
+						y = y - 15
+						c.drawString(x,y, wrap_text[1])
+					else:
+						c.drawString(x,y,item)
+						y = y- 15
+				y -= 30
 
 		elif key == 'datefiles':
 			for date, filer in value.items():
@@ -407,8 +478,20 @@ def gen_report(dictionary):
 				y = y - 30
 				c.setFont('Helvetica', 10)
 				for item in filer:
-					c.drawString(x,y,item)
-					y = y - 15
+					if y <= 50:
+						c.showPage()
+						c.setFont('Helvetica', 10)
+						y = 11 * 72
+					if len(item) > 110:
+						wrap_text = textwrap.wrap(item, width=110)
+						c.drawString(x,y, wrap_text[0])
+						y = y - 15
+						c.drawString(x,y, wrap_text[1])
+					else:
+						c.drawString(x,y,item)
+						y = y - 15
+				y -= 30
+
 	c.save()
 
 def create_dict(key, dictionary, results):

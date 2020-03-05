@@ -5,6 +5,15 @@ import gui
 
 def main():
 
+	print("\n")
+	print("███╗   ██╗███████╗███████╗████████╗")
+	print("████╗  ██║██╔════╝██╔════╝╚══██╔══╝")
+	print("██╔██╗ ██║███████╗█████╗     ██║   ")
+	print("██║╚██╗██║╚════██║██╔══╝     ██║   ")
+	print("██║ ╚████║███████║██║        ██║   ")
+	print("╚═╝  ╚═══╝╚══════╝╚═╝        ╚═╝   ")
+	print("       Not So Forensic Tool        ")
+
 	if len(sys.argv) != 2:
 		print("Syntax: %s [gui/txt]" % sys.argv[0])
 		exit()
